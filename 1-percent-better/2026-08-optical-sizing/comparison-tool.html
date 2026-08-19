@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APL — Inter Optical Sizing Comparison</title>
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<style>
+  :root { color-scheme: light; }
+
+  * { box-sizing: border-box; }
+
+  html { font-family: 'InterVariable', 'Inter', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }
+  @supports (font-variation-settings: normal) {
+    html { font-family: 'InterVariable', 'Inter', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }
+  }
+
+  body {
+    margin: 0;
+    background: #f5f5f3;
+    color: #1a1a1a;
+    padding: 48px 24px 96px;
+  }
+
+  .wrap {
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
+  header {
+    margin-bottom: 40px;
+  }
+
+  header h1 {
+    font-size: 26px;
+    font-weight: 300;
+    font-optical-sizing: auto;
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+
+  header p {
+    font-size: 14px;
+    color: #555;
+    max-width: 680px;
+    line-height: 1.5;
+    margin: 0 0 4px;
+    font-optical-sizing: auto;
+  }
+
+  header .src {
+    font-size: 12px;
+    color: #999;
+    font-family: 'SF Mono', Menlo, monospace;
+  }
+
+  .toggle-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 0 0 36px;
+    padding: 14px 20px;
+    background: #fff;
+    border: 1px solid #e2e0da;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #777;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 16px;
+    z-index: 100;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  }
+
+  .toggle-bar-spacer {
+    height: 28px;
+  }
+
+  .mode-switch {
+    display: inline-flex;
+    background: #ece9e2;
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+  }
+
+  .mode-switch button {
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #777;
+  }
+
+  .mode-switch button.active {
+    background: #fff;
+    color: #1a1a1a;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+
+  .dot.off { background: #1a1a1a; }
+  .dot.stock { background: #874FFF; }
+  .dot.on { background: #d4622a; }
+
+  /* each overlay layer is shown only when its chip is active */
+  body:not(.show-off) .overlay-stack .sample.off { display: none; }
+  body:not(.show-stock) .overlay-stack .sample.stock { display: none; }
+  body:not(.show-on) .overlay-stack .sample.on { display: none; }
+
+  .chip-switch {
+    display: inline-flex;
+    gap: 6px;
+  }
+
+  .chip-switch button {
+    border: 1px solid #e2e0da;
+    background: #fff;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    color: #777;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .chip-switch button .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .chip-switch button.active.off { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .chip-switch button.active.stock { background: #874FFF; color: #fff; border-color: #874FFF; }
+  .chip-switch button.active.on { background: #d4622a; color: #fff; border-color: #d4622a; }
+
+  .chip-switch button.active .dot { background: #fff; }
+
+  .chip-switch button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  body.mode-overlay .row-label { padding-top: 0; }
+
+  .overlay-stack {
+    position: relative;
+    grid-column: 2 / -1;
+    min-height: 1.4em;
+  }
+
+  body:not(.mode-overlay) .overlay-stack { display: none; }
+  body.mode-overlay .side-by-side { display: none; }
+
+  .overlay-stack .sample {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    mix-blend-mode: multiply;
+  }
+
+  .overlay-stack .sample.off { color: #1a1a1a; }
+  .overlay-stack .sample.stock { color: #874FFF; }
+  .overlay-stack .sample.on { color: #d4622a; }
+
+  .side-by-side {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    grid-column: 2 / -1;
+  }
+
+  .stack-line {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .stack-line .tag {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    width: 128px;
+  }
+
+  .stack-line .tag .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex: 0 0 auto;
+  }
+
+  .stack-line .tag.off { color: #6b6a63; }
+  .stack-line .tag.stock { color: #874FFF; }
+  .stack-line .tag.on { color: #a8431a; }
+
+  .panel {
+    background: #fff;
+    border: 1px solid #e2e0da;
+    border-radius: 12px;
+    padding: 4px 28px;
+    margin-bottom: 40px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #a8431a;
+    margin: 0 0 12px;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 190px 1fr 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+    padding: 26px 0;
+    border-bottom: 1px solid #e2e0da;
+  }
+
+  .row:last-child { border-bottom: none; }
+
+  .row-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #333;
+    padding-top: 4px;
+    font-family: -apple-system, sans-serif;
+  }
+
+  .row-label .token {
+    display: block;
+    font-size: 11px;
+    color: #a8431a;
+    font-family: 'SF Mono', Menlo, monospace;
+    margin-top: 2px;
+  }
+
+  .row-label .spec {
+    display: block;
+    font-size: 10.5px;
+    color: #b0ada4;
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+
+  .sample {
+    min-width: 0;
+    word-break: break-word;
+    color: #1a1a1a;
+    font-feature-settings: 'cv01' on, 'cv02' on, 'cv08' on, 'cv09' on, 'cv10' on, 'clig' off, 'liga' off, 'lnum', 'pnum';
+  }
+
+  .sample.numeric {
+    font-feature-settings: 'cv01' on, 'cv02' on, 'cv09' on, 'cv10' on, 'clig' off, 'liga' off;
+  }
+
+  .sample.off {
+    font-optical-sizing: none;
+  }
+
+  .sample.stock {
+    font-optical-sizing: auto;
+  }
+
+  .sample.on {
+    font-optical-sizing: auto;
+    letter-spacing: normal !important;
+  }
+
+  footer {
+    margin-top: 24px;
+    font-size: 13px;
+    color: #888;
+    line-height: 1.6;
+    max-width: 680px;
+  }
+
+  footer strong { color: #555; }
+  footer code { background: #ece9e2; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>APL type scale — Inter with vs. without optical sizing</h1>
+    <p>Every row below uses the exact size, weight, letter-spacing, and font-feature-settings values from APL's "core-*" typography tokens (Inter-based styles), read directly from <code>design-tokens/src/typography/core.yaml</code> and <code>design-tokens/assets/theme/apl-theme.css</code>. Each row shows the current APL style vs. APL with optical sizing turned on. Number tokens get a third variant with their manual −1px letter-spacing removed, since that adjustment predates Inter's optical sizing axis and becomes redundant once it's on.</p>
+    <p class="src">Source: Addepar/addepar-product-language — core.yaml + apl-theme.css</p>
+  </header>
+
+  <div class="toggle-bar-spacer"></div>
+
+  <div class="toggle-bar">
+    <div class="mode-switch">
+      <button type="button" id="btnSideBySide" class="active" onclick="setMode('side')">Side by side</button>
+      <button type="button" id="btnOverlay" onclick="setMode('overlay')">Overlay (width &amp; letterform)</button>
+    </div>
+    <div class="chip-switch" id="chipSwitch" style="display:none;">
+      <button type="button" id="chipOff" class="off active" onclick="toggleLayer('off')"><span class="dot off"></span>Current APL style</button>
+      <button type="button" id="chipStock" class="stock" onclick="toggleLayer('stock')"><span class="dot stock"></span>With optical sizing</button>
+      <button type="button" id="chipOn" class="on" onclick="toggleLayer('on')"><span class="dot on"></span>+ remove negative letter-spacing <span style="font-weight:400; opacity:0.75;">(number styles only)</span></button>
+    </div>
+    <span id="tipText">Tip: zoom in (Cmd/Ctrl + +) to see letterform differences more clearly, especially at core-body-small and core-body-metadata.</span>
+  </div>
+
+  <div class="panel">
+    <div class="row" style="border-bottom:none; padding-bottom:8px;">
+      <div class="section-label" style="grid-column: 1 / -1;">Small / dense UI text</div>
+    </div>
+
+    <div class="row">
+      <div class="row-label">core-body-metadata<span class="token">token</span><span class="spec">10px / 11px line-height / weight 400 / +0.01em</span></div>
+      <div class="side-by-side">
+        <div class="stack-line">
+          <span class="tag off"><span class="dot off"></span>As shipped</span>
+          <div class="sample off" style="font-size:10px; line-height:11px; font-weight:400; letter-spacing:0.01em;">Last synced 2 minutes ago · Account #4471-882 · Reconciled 08/19/2026</div>
+        </div>
+        <div class="stack-line">
+          <span class="tag stock"><span class="dot stock"></span>Optical sizing</span>
+          <div class="sample stock" style="font-size:10px; line-height:11px; font-weight:400; letter-spacing:0.01em;">Last synced 2 minutes ago · Account #4471-882 · Reconciled 08/19/2026</div>
+        </div>
+      </div>
+
+      <div class="overlay-stack">
+
+        <div class="sample off" style="font-size:10px; line-height:11px; font-weight:400; letter-spacing:0.01em;">Last synced 2 minutes ago · Account #4471-882 · Reconciled 08/19/2026</div>
+
+        <div class="sample stock" style="font-size:10px; line-height:11px; font-weight:400; letter-spacing:0.01em;">Last synced 2 minutes ago · Account #4471-882 · Reconciled 08/19/2026</div>
+
+        </div>
+    </div>
+
+    <div class="row">
+      <div class="row-label">core-body-extrasmall<span class="token">token</span><span class="spec">11px / 14px line-height / weight 400 / +0.01em</span></div>
+      <div class="side-by-side">
+        <div class="stack-line">
+          <span class="tag off"><span class="dot off"></span>As shipped</span>
+          <div class="sample off" style="font-size:11px; line-height:14px; font-weight:400; letter-spacing:0.01em;">Holdings, allocations, and performance figures update automatically as new statements are ingested.</div>
+        </div>
+        <div class="stack-line">
+          <span class="tag stock"><span class="dot stock"></span>Optical sizing</span>
+          <div class="sample stock" style="font-size:11px; line-height:14px; font-weight:400; letter-spacing:0.01em;">Holdings, allocations, and performance figures update automatically as new statements are ingested.</div>
+        </div>
+      </div>
+
+      <div class="overlay-stack">
+
+        <div class="sample off" style="font-size:11px; line-height:14px; font-weight:400; letter-spacing:0.01em;">Holdings, allocations, and performance figures update automatically as new statements are ingested.</div>
+
+        <div class="sample stock" style="font-size:11px; line-height:14px; font-weight:400; letter-spacing:0.01em;">Holdings, allocations, and performance figures update automatically as new statements are ingested.</div>
+
+        </div>
+    </div>
+
+    <div class="row">
+      <div class="row-label">core-body-small<span class="token">token</span><span class="spec">12px / 16px line-height / weight 400 / +0.01em</span></div>
+      <div class="side-by-side">
+        <div class="stack-line">
+          <span class="tag off"><span class="dot off"></span>As shipped</span>
+          <div class="sample off" style="font-size:12px; line-height:16px; font-weight:400; letter-spacing:0.01em;">Portfolio value reflects the most recent close and may not include same-day transactions or pending trades.</div>
+        </div>
+        <div class="stack-line">
+          <span class="tag stock"><span class="dot stock"></span>Optical sizing</span>
+          <div class="sample stock" style="font-size:12px; line-height:16px; font-weight:400; letter-spacing:0.01em;">Portfolio value reflects the most recent close and may not include same-day transactions or pending trades.</div>
+        </div>
+      </div>
+
+      <div class="overlay-stack">
+
+        <div class="sample off" style="font-size:12px; line-height:16px; font-weight:400; letter-spacing:0.01em;">Portfolio value reflects the most recent close and may not include same-day transactions or pending trades.</div>
+
+        <div class="sample stock" style="font-size:12px; line-height:16px; font-weight:400; letter-spacing:0.01em;">Portfolio value reflects the most recent close and may not include same-day transactions or pending trades.</div>
+
+        </div>
+    </div>
+
+    <div class="row">
+      <div class="row-label">core-body-compact<span class="token">token</span><span class="spec">13px / 18px line-height / weight 400 / +0.01em</span></div>
+      <div class="side-by-side">
+        <div class="stack-line">
+          <span class="tag off"><span class="dot off"></span>As shipped</span>
+          <div class="sample off" style="font-size:13px; line-height:18px; font-weight:400; letter-spacing:0.01em;">Rebalancing recommendations are generated nightly based on target allocation drift thresholds.</div>
+        </div>
+        <div class="stack-line">
+          <span class="tag stock"><span class="dot stock"></span>Optical sizing</span>
+          <div class="sample stock" style="font-size:13px; line-height:18px; font-weight:400; letter-spacing:0.01em;">Rebalancing recommendations are generated nightly based on target allocation drift thresholds.</div>
+        </div>
+      </div>
+
+      <div class="overlay-stack">
+
+        <div class="sample off" style="font-size:13px; line-height:18px; font-weight:400; letter-spacing:0.01em;">Rebalancing recommendations are generated nightly based on target allocation drift thresholds.</div>
+
+        <div class="sample stock" style="font-size:13px; line-height:18px; font-weight:400; letter-spacing:0.01em;">Rebalancing recommendations are generated nightly based on target allocation drift thresholds.</div>
+
+        </div>
+    </div>
+
+    <div class="row">
+      <div class="row-label">core-body-paragraph<span class="token">token</span><span class="spec">14px / 21px line-height / weight 400 / +0.01em</span></div>
+      <div class="side-by-side">
+        <div class="stack-line">
+          <span class="tag off"><span class="dot off"></span>As shipped</span>
+          <div class="sample off" style="font-size:14px; line-height:21px; font-weight:400; letter-spacing:0.01em;">Advisors rely on this view to reconcile client statements against custodial data, so legibility at small sizes directly affects how quickly discrepancies are caught.</div>
+        </div>
+        <div class="stack-line">
+          <span class="tag stock"><span class="dot stock"></span>Optical sizing</span>
+          <div class="sample stock" style="font-size:14px; line-height:21px; font-weight:400; letter-spacing:0.01em;">Advisors rely on this view to reconcile client statements against custodial data, so legibility at small sizes directly affects how quickly discrepancies are caught.</div>
+        </div>
+      </div>
+
+      <div class="overlay-stack">
+
+        <div class="sample off" style="font-size:14px; line-height:21px; font-weight:400; letter-spacing:0.01em;">Advisors rely on this view to reconcile client statements against custodial data, so legibility at small sizes directly affects how quickly discrepancies are caught.</div>
+
+        <div class="sample stock" style="font-size:14px; line-height:21px; font-weight:400; letter-spacing:0.01em;">Advisors rely on this view to reconcile client statements against custodial data, so legibility at small sizes directly affects how quickly discrepancies are caught.</div>
+
+        </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="row" style="border-bottom:none; padding-bottom:8px;">
+      <div class="section-label" style="grid-column: 1 / -1;">Headings &amp; titles</div>
+    </div>
+
+    <div class="row">
+      <div class="row-label">core-heading-l<span class="token">token</span><span class="spec">16px / 20px line-height / weight 400</span></div>
+      <div class="side-by-side">
+        <div class="stack-line">
+          <span class="tag off"><span class="dot off"></span>As shipped</span>
+          <div class="sample off" style="font-size:16px; line-height:20px; font-weight:400;">Account holdings breakdown</div>
+        </div>
+        <div class="stack-line">
+          <span class="tag stock"><span class="dot stock"></span>Optical sizing</span>
+          <div class="sample stock" style="font-size:16px; line-height:20px; font-weight:400;">Account holdings breakdown</div>
+        </div>
+      </div>
+
+      <div class="overlay-stack">
+
+        <div class="sample off" style="font-size:16px; line-height:20px; font-weight:400;">Account holdings breakdown</div>
+
+        <div class="sample stock" style="font-size:16px; line-height:20px; font-weight:400;">Account holdings breakdown</div>
+
+        </div>
+    </div>
+
+    <div class="row">
+      <div class="row-label">core-heading-l-emphasis<span class="token">token</span><span class="spec">16px / 20px line-height / weight 500</span></div>
+      <div class="side-by-side">
+        <div class="stack-line">
+          <span class="tag off"><span class="dot off"></span>As shipped</span>
+          <div class="sample off" style="font-size:16px; line-height:20px; font-weight:500;">Account holdings breakdown</div>
+        </div>
+        <div class="stack-line">
+          <span class="tag stock"><span class="dot stock"></span>Optical sizing</span>
+          <div class="sample stock" style="font-size:16px; line-height:20px; font-weight:500;">Account holdings breakdown</div>
+        </div>
+      </div>
+
+      <div class="overlay-stack">
+
+        <div class="sample off" style="font-size:16px; line-height:20px; font-weight:500;">Account holdings breakdown</div>
+
+        <div class="sample stock" style="font-size:16px; line-height:20px; font-weight:500;">Account holdings breakdown</div>
+
+        </div>
+    </div>
+
+    <div class="row">
+      <div class="row-label">core-heading-xl<span class="token">core-panel-title</span><span class="spec">20px / 24px line-height / weight 400</span></div>
+      <div class="side-by-side">
+        <div class="stack-line">
+          <span class="tag off"><span class="dot off"></span>As shipped</span>
+          <div class="sample off" style="font-size:20px; line-height:24px; font-weight:400;">Asset allocation by class</div>
+        </div>
+        <div class="stack-line">
+          <span class="tag stock"><span class="dot stock"></span>Optical sizing</span>
+          <div class="sample stock" style="font-size:20px; line-height:24px; font-weight:400;">Asset allocation by class</div>
+        </div>
+      </div>
+
+      <div class="overlay-stack">
+
+        <div class="sample off" style="font-size:20px; line-height:24px; font-weight:400;">Asset allocation by class</div>
+
+        <div class="sample stock" style="font-size:20px; line-height:24px; font-weight:400;">Asset allocation by class</div>
+
+        </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="row" style="border-bottom:none; padding-bottom:8px;">
+      <div class="section-label" style="grid-column: 1 / -1;">Number tokens (light weight, tight tracking)</div>
+    </div>
+
+    <div class="row">
+      <div class="row-label">number-l<span class="token">token</span><span class="spec">32px / 120% line-height / weight 300 / −1px</span></div>
+      <div class="side-by-side">
+        <div class="stack-line">
+          <span class="tag off"><span class="dot off"></span>As shipped</span>
+          <div class="sample off numeric" style="font-size:32px; line-height:120%; font-weight:300; letter-spacing:-1px;">$4,218,904</div>
+        </div>
+        <div class="stack-line">
+          <span class="tag stock"><span class="dot stock"></span>Optical sizing</span>
+          <div class="sample stock numeric" style="font-size:32px; line-height:120%; font-weight:300; letter-spacing:-1px;">$4,218,904</div>
+        </div>
+        <div class="stack-line">
+          <span class="tag on"><span class="dot on"></span>Optical + stock tracking</span>
+          <div class="sample on numeric" style="font-size:32px; line-height:120%; font-weight:300; letter-spacing:-1px;">$4,218,904</div>
+        </div>
+      </div>
+
+      <div class="overlay-stack">
+
+        <div class="sample off numeric" style="font-size:32px; line-height:120%; font-weight:300; letter-spacing:-1px;">$4,218,904</div>
+
+        <div class="sample stock numeric" style="font-size:32px; line-height:120%; font-weight:300; letter-spacing:-1px;">$4,218,904</div>
+
+        <div class="sample on numeric" style="font-size:32px; line-height:120%; font-weight:300; letter-spacing:-1px;">$4,218,904</div>
+
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-label">number-xl<span class="token">token</span><span class="spec">40px / 120% line-height / weight 300 / −1px</span></div>
+      <div class="side-by-side">
+        <div class="stack-line">
+          <span class="tag off"><span class="dot off"></span>As shipped</span>
+          <div class="sample off numeric" style="font-size:40px; line-height:120%; font-weight:300; letter-spacing:-1px;">$128.437M</div>
+        </div>
+        <div class="stack-line">
+          <span class="tag stock"><span class="dot stock"></span>Optical sizing</span>
+          <div class="sample stock numeric" style="font-size:40px; line-height:120%; font-weight:300; letter-spacing:-1px;">$128.437M</div>
+        </div>
+        <div class="stack-line">
+          <span class="tag on"><span class="dot on"></span>Optical + stock tracking</span>
+          <div class="sample on numeric" style="font-size:40px; line-height:120%; font-weight:300; letter-spacing:-1px;">$128.437M</div>
+        </div>
+      </div>
+
+      <div class="overlay-stack">
+
+        <div class="sample off numeric" style="font-size:40px; line-height:120%; font-weight:300; letter-spacing:-1px;">$128.437M</div>
+
+        <div class="sample stock numeric" style="font-size:40px; line-height:120%; font-weight:300; letter-spacing:-1px;">$128.437M</div>
+
+        <div class="sample on numeric" style="font-size:40px; line-height:120%; font-weight:300; letter-spacing:-1px;">$128.437M</div>
+
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-label">number-xxl<span class="token">token</span><span class="spec">48px / 120% line-height / weight 300 / −1px</span></div>
+      <div class="side-by-side">
+        <div class="stack-line">
+          <span class="tag off"><span class="dot off"></span>As shipped</span>
+          <div class="sample off numeric" style="font-size:48px; line-height:120%; font-weight:300; letter-spacing:-1px;">+18.247%</div>
+        </div>
+        <div class="stack-line">
+          <span class="tag stock"><span class="dot stock"></span>Optical sizing</span>
+          <div class="sample stock numeric" style="font-size:48px; line-height:120%; font-weight:300; letter-spacing:-1px;">+18.247%</div>
+        </div>
+        <div class="stack-line">
+          <span class="tag on"><span class="dot on"></span>Optical + stock tracking</span>
+          <div class="sample on numeric" style="font-size:48px; line-height:120%; font-weight:300; letter-spacing:-1px;">+18.247%</div>
+        </div>
+      </div>
+
+      <div class="overlay-stack">
+
+        <div class="sample off numeric" style="font-size:48px; line-height:120%; font-weight:300; letter-spacing:-1px;">+18.247%</div>
+
+        <div class="sample stock numeric" style="font-size:48px; line-height:120%; font-weight:300; letter-spacing:-1px;">+18.247%</div>
+
+        <div class="sample on numeric" style="font-size:48px; line-height:120%; font-weight:300; letter-spacing:-1px;">+18.247%</div>
+
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <strong>What to look for:</strong> compare "As shipped" to "Optical sizing" to see the effect of turning optical sizing on top of APL's current styles. For number tokens, also compare against "Optical + stock tracking" to see whether removing the manual −1px letter-spacing (an adjustment made before Inter's optical sizing existed) feels better once optical sizing is already doing spacing work on its own — if the last two look very close, the manual override is redundant and can be removed.
+    <br><br>
+    All values above are taken directly from APL's current tokens — including font-feature-settings (stylistic sets, tabular/proportional figures, ligatures) — nothing here changes size, weight, or feature settings. This is strictly isolating optical sizing and letter-spacing as variables so you can judge it against real APL type, not a generic scale.
+    <br><br>
+    Note: <code>font-optical-sizing</code> requires the browser to support the Inter Variable font's <code>opsz</code> axis (Chrome, Edge, Safari all do). The legacy serif styles (headline, subtitle, page-title, etc., which use Tiempos Headline) aren't included here since optical sizing is an Inter-specific consideration — those styles use a different typeface entirely.
+    <br><br>
+    <strong>Overlay mode:</strong> lets you turn on any combination of layers — zero, one, two, or all three — stacked directly on top of each other per row, color-coded (black = current APL style, purple = with optical sizing, orange = with optical sizing and the negative letter-spacing removed) using multiply blending so overlapping strokes darken. The third chip only has a visible effect on number styles, since removing the −1px tracking is specific to those tokens. This makes differences in overall word/line width and letterform shape much easier to spot than side-by-side rows — if the layers trace almost the same outline, the variants are nearly identical in width and shape at that size; if they visibly diverge or "fringe" in color at the edges of letters, that's where optical sizing or tracking is changing the letterforms or spacing.
+  </footer>
+</div>
+<script>
+  document.body.classList.add('show-off');
+
+  const layerState = { off: true, stock: false, on: false };
+
+  function toggleLayer(layer) {
+    layerState[layer] = !layerState[layer];
+    const body = document.body;
+    const chip = document.getElementById('chip' + layer.charAt(0).toUpperCase() + layer.slice(1));
+
+    if (layerState[layer]) {
+      body.classList.add('show-' + layer);
+      chip.classList.add('active');
+    } else {
+      body.classList.remove('show-' + layer);
+      chip.classList.remove('active');
+    }
+  }
+
+  function setMode(mode) {
+    const body = document.body;
+    const btnSide = document.getElementById('btnSideBySide');
+    const btnOverlay = document.getElementById('btnOverlay');
+    const chipSwitch = document.getElementById('chipSwitch');
+    const tip = document.getElementById('tipText');
+
+    if (mode === 'overlay') {
+      body.classList.add('mode-overlay');
+      btnOverlay.classList.add('active');
+      btnSide.classList.remove('active');
+      chipSwitch.style.display = 'inline-flex';
+      tip.textContent = 'Tip: turn chips on or off to layer any combination — look for color fringing at letter edges, that\'s where variants diverge in width or shape. Zoom in for small sizes.';
+    } else {
+      body.classList.remove('mode-overlay');
+      btnSide.classList.add('active');
+      btnOverlay.classList.remove('active');
+      chipSwitch.style.display = 'none';
+      tip.textContent = 'Tip: zoom in (Cmd/Ctrl + +) to see letterform differences more clearly, especially at core-body-small and core-body-metadata.';
+    }
+  }
+
+</script>
+</body>
+</html>

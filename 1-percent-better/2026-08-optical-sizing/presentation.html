@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Optical Sizing in APL</title>
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+
+  html { font-family: 'InterVariable', 'Inter', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }
+
+  body {
+    margin: 0;
+    background: #f5f5f3;
+    color: #1a1a1a;
+  }
+
+  .deck {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 0 24px 120px;
+  }
+
+  /* ---------- nav ---------- */
+  .navbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(245,245,243,0.92);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid #e2e0da;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .navbar .brand {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #874FFF;
+  }
+
+  .navlinks {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .navlinks a {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b6a63;
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+  }
+
+  .navlinks a:hover { background: #ece9e2; color: #1a1a1a; }
+
+  /* ---------- sections ---------- */
+  section {
+    padding: 96px 0 40px;
+    border-bottom: 1px solid #e2e0da;
+    scroll-margin-top: 70px;
+  }
+
+  section:last-of-type { border-bottom: none; }
+
+  .kicker {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #874FFF;
+    margin: 0 0 14px;
+  }
+
+  h1 {
+    font-size: 44px;
+    font-weight: 300;
+    font-optical-sizing: auto;
+    letter-spacing: -0.01em;
+    margin: 0 0 20px;
+    line-height: 1.1;
+  }
+
+  h2 {
+    font-size: 30px;
+    font-weight: 400;
+    font-optical-sizing: auto;
+    letter-spacing: -0.01em;
+    margin: 0 0 16px;
+    line-height: 1.2;
+  }
+
+  h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 32px 0 10px;
+  }
+
+  p.lede {
+    font-size: 17px;
+    line-height: 1.6;
+    color: #444;
+    max-width: 680px;
+    margin: 0 0 8px;
+  }
+
+  p.body-copy {
+    font-size: 14px;
+    line-height: 1.65;
+    color: #4a4a4a;
+    max-width: 640px;
+  }
+
+  .cover {
+    padding-top: 140px;
+    padding-bottom: 80px;
+  }
+
+  .cover h1 { font-size: 56px; max-width: 760px; }
+  .cover .meta {
+    display: flex;
+    gap: 18px;
+    margin-top: 28px;
+    font-size: 12px;
+    color: #999;
+    font-family: 'SF Mono', Menlo, monospace;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #ede4ff;
+    color: #874FFF;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .panel {
+    background: #fff;
+    border: 1px solid #e2e0da;
+    border-radius: 14px;
+    padding: 28px 32px;
+    margin: 20px 0;
+  }
+
+  .panel-tight { padding: 20px 24px; }
+
+  .grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 720px) { .grid2 { grid-template-columns: 1fr; } }
+
+  /* ---------- opsz axis diagram ---------- */
+  .axis-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 28px 0 10px;
+    padding: 0 4px;
+  }
+
+  .axis-row .stop {
+    text-align: center;
+    color: #1a1a1a;
+  }
+
+  .axis-row .stop .num {
+    display: block;
+    font-size: 10px;
+    color: #b0ada4;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+
+  .axis-line {
+    height: 3px;
+    background: linear-gradient(90deg, #ece9e2, #874FFF);
+    border-radius: 3px;
+    margin: 0 4px 28px;
+  }
+
+  /* ---------- extreme demo ---------- */
+  .extreme-stage {
+    background: #14121b;
+    border-radius: 16px;
+    padding: 56px 40px 44px;
+    text-align: center;
+    overflow: hidden;
+    margin: 24px 0;
+  }
+
+  .extreme-word {
+    font-size: 136px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1;
+    font-optical-sizing: none;
+    font-variation-settings: 'opsz' 14;
+    transition: font-variation-settings 1.1s cubic-bezier(.65,0,.35,1), letter-spacing 1.1s cubic-bezier(.65,0,.35,1);
+    letter-spacing: 0.01em;
+    word-break: break-word;
+    white-space: nowrap;
+  }
+
+  .extreme-word.opsz-on {
+    font-optical-sizing: auto;
+    font-variation-settings: 'opsz' 32;
+    letter-spacing: -0.01em;
+  }
+
+  @media (max-width: 720px) {
+    .extreme-word { font-size: 80px; }
+  }
+
+  .stage-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 28px;
+  }
+
+  .toggle-pill {
+    display: inline-flex;
+    background: #23202e;
+    border-radius: 999px;
+    padding: 4px;
+    gap: 2px;
+  }
+
+  .toggle-pill button {
+    border: none;
+    background: transparent;
+    color: #9d97ad;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 9px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
+  .toggle-pill button.active {
+    background: #874FFF;
+    color: #fff;
+  }
+
+  .stage-caption {
+    font-size: 12px;
+    color: #6b6a63;
+    text-align: center;
+    margin-top: 14px;
+  }
+
+  /* ---------- heading morph demo (slide 6) ---------- */
+  .morph-stage {
+    background: #fff;
+    border: 1px solid #e2e0da;
+    border-radius: 16px;
+    padding: 48px 40px;
+    text-align: center;
+    margin: 20px 0 8px;
+  }
+
+  .morph-word {
+    display: block;
+    color: #1a1a1a;
+    font-weight: 400;
+    font-optical-sizing: none;
+    font-variation-settings: 'opsz' 0;
+    letter-spacing: 0em;
+    line-height: 1.05;
+    transition: font-variation-settings 1.4s cubic-bezier(.65,0,.35,1), letter-spacing 1.4s cubic-bezier(.65,0,.35,1);
+    font-size: clamp(64px, 12vw, 168px);
+  }
+
+  .morph-word.opsz-on {
+    font-variation-settings: 'opsz' 20;
+    letter-spacing: -0.015em;
+  }
+
+  .morph-readout {
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 11px;
+    color: #874FFF;
+    margin-top: 18px;
+    letter-spacing: 0.02em;
+  }
+
+  .morph-note {
+    font-size: 12px;
+    color: #999;
+    margin-top: 10px;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* ---------- conclusion cards ---------- */
+  .conclusion {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 18px;
+    padding: 22px 0;
+    border-bottom: 1px solid #efeee9;
+  }
+
+  .conclusion:last-child { border-bottom: none; }
+
+  .conclusion .num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #ede4ff;
+    color: #874FFF;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .conclusion h4 {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 6px;
+  }
+
+  .conclusion p {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: #555;
+    margin: 0;
+  }
+
+  .conclusion .tag {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 8px;
+    border-radius: 5px;
+    margin-top: 8px;
+  }
+
+  .tag.ok { background: #e3f5e9; color: #1f8a4c; }
+  .tag.watch { background: #fff2d9; color: #b6791b; }
+  .tag.change { background: #fbe6da; color: #a8431a; }
+
+  /* code / implementation blocks */
+  .code {
+    background: #1a1a1a;
+    color: #e6e6e6;
+    border-radius: 10px;
+    padding: 18px 20px;
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 12.5px;
+    line-height: 1.7;
+    overflow-x: auto;
+    margin: 14px 0;
+  }
+
+  .code .c1 { color: #8b8b8b; }
+  .code .c2 { color: #d4622a; }
+  .code .c3 { color: #874FFF; }
+  .code .c4 { color: #6dc38f; }
+
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .steps li {
+    display: flex;
+    gap: 14px;
+    padding: 16px 0;
+    border-bottom: 1px solid #efeee9;
+  }
+
+  .steps li:last-child { border-bottom: none; }
+
+  .steps .step-num {
+    flex: 0 0 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .steps .step-body h4 {
+    font-size: 13.5px;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+
+  .steps .step-body p {
+    font-size: 13px;
+    color: #555;
+    margin: 0;
+    line-height: 1.55;
+  }
+
+  .link-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: #ede4ff;
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin: 20px 0;
+  }
+
+  .link-card .lc-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #4a2b99;
+  }
+
+  .link-card .lc-sub {
+    font-size: 12px;
+    color: #6d4fc0;
+    margin-top: 2px;
+  }
+
+  .link-card a {
+    background: #874FFF;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 9px 16px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+
+  .exploration-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 20px 0;
+  }
+
+  @media (max-width: 720px) { .exploration-list { grid-template-columns: 1fr; } }
+
+  .exploration-list .item {
+    background: #fff;
+    border: 1px solid #e2e0da;
+    border-radius: 10px;
+    padding: 16px 18px;
+    font-size: 13px;
+    color: #444;
+    line-height: 1.5;
+  }
+
+  .exploration-list .item .n {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    background: #f0eefc;
+    color: #874FFF;
+    font-size: 10.5px;
+    font-weight: 700;
+    margin-right: 8px;
+  }
+
+  footer.credit {
+    text-align: center;
+    padding: 60px 0 20px;
+    font-size: 12px;
+    color: #b0ada4;
+  }
+
+  code.inline {
+    background: #ece9e2;
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="navbar">
+  <span class="brand"><a href="../index.html" style="color:inherit; text-decoration:none;">1% Better</a> · Optical Sizing</span>
+  <div class="navlinks">
+    <a href="#what">What is it</a>
+    <a href="#extreme">See it</a>
+    <a href="#proposal">Proposal</a>
+    <a href="#exploration">Exploration</a>
+    <a href="#conclusions">Conclusions</a>
+    <a href="#implementation">Implementation</a>
+  </div>
+</div>
+
+<div class="deck">
+
+  <!-- COVER -->
+  <section class="cover">
+    <span class="badge">Design system proposal</span>
+    <h1 style="margin-top:18px;">Turning on optical sizing for Inter across APL</h1>
+    <p class="lede">A look at what Inter's optical size axis does, why it's a low-risk, high-craft upgrade for our type system, and how we get there.</p>
+    <div class="meta">
+      <span>APL Design Tokens</span>
+      <span>·</span>
+      <span>Inter Variable, opsz 14–32</span>
+      <span>·</span>
+      <span id="todayDate"></span>
+    </div>
+  </section>
+
+  <!-- 1. WHAT IS OPTICAL SIZING -->
+  <section id="what">
+    <div class="kicker">01 — Concept</div>
+    <h2>What is optical sizing?</h2>
+    <p class="lede">Most typefaces ship one set of letterforms that gets mathematically scaled up or down. Inter instead redraws its letterforms across a size axis called <code class="inline">opsz</code> — small sizes get more open apertures and slightly looser spacing for legibility; large sizes get tighter spacing and more refined details, since legibility isn't the constraint anymore.</p>
+
+    <div class="panel">
+      <h3 style="margin-top:0;">Inter's optical size axis</h3>
+      <p class="body-copy">Inter's variable font defines this axis from <strong>14 to 32</strong>. Below 14, the font is clamped to the 14 instance (its most "legible" shape set). Above 32, it's clamped to the 32 instance (its most "refined" shape set). There's no adaptation outside that range — a fact that turns out to matter a lot for how safely we can roll this out (see conclusion&nbsp;#1).</p>
+      <div class="axis-row">
+        <div class="stop"><span>Below 14</span><span class="num">clamped to 14</span></div>
+        <div class="stop"><span>14</span><span class="num">open, loose</span></div>
+        <div class="stop"><span>20</span><span class="num">—</span></div>
+        <div class="stop"><span>32</span><span class="num">tight, refined</span></div>
+        <div class="stop"><span>Above 32</span><span class="num">clamped to 32</span></div>
+      </div>
+      <div class="axis-line"></div>
+    </div>
+  </section>
+
+  <!-- 2. EXTREME DEMO -->
+  <section id="extreme">
+    <div class="kicker">02 — See it</div>
+    <h2>The effect, exaggerated</h2>
+    <p class="lede">At normal UI sizes the shift is subtle by design. To make it obvious, here's the full swing of the axis — opsz 14 vs. opsz 32 — blown up to a size we'd never actually ship, so the letterform change is unmistakable.</p>
+
+    <div class="extreme-stage">
+      <div class="extreme-word" id="extremeWord">Pa Sc Rg 5%</div>
+      <div class="stage-controls">
+        <div class="toggle-pill">
+          <button type="button" id="btnExtremeOff" class="active" onclick="setExtreme(false)">opsz: none</button>
+          <button type="button" id="btnExtremeOn" onclick="setExtreme(true)">opsz: auto</button>
+        </div>
+      </div>
+      <div class="stage-caption" style="color:#8b8697;">Toggle to see the full range of Inter's redrawn letterforms — same weight, same size, only the opsz axis moves.</div>
+    </div>
+  </section>
+
+  <!-- 3. PROPOSAL -->
+  <section id="proposal">
+    <div class="kicker">03 — Proposal</div>
+    <h2>What we're proposing for APL</h2>
+    <p class="lede">Turn on <code class="inline">font-optical-sizing: auto</code> globally across APL's Inter-based type styles. The browser (or, on native, our own opsz mapping) automatically picks the right letterform for each token's size — no per-token maintenance, no manual swapping between "text" and "display" cuts.</p>
+    <div class="grid2">
+      <div class="panel panel-tight">
+        <h3 style="margin-top:0;">Why now</h3>
+        <p class="body-copy">Inter is already APL's core sans typeface. Turning on its optical axis is additive — it doesn't require adopting a new typeface, changing sizes, or touching component APIs. It's a rendering-layer upgrade.</p>
+      </div>
+      <div class="panel panel-tight">
+        <h3 style="margin-top:0;">Why it's low-risk</h3>
+        <p class="body-copy">Because the axis floor is 14, our smallest, most structurally load-bearing text (buttons, labels, table cells) is unaffected. The tokens that shift are headings, display type, and numbers — places width fluctuation is far less likely to break layout.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. HOW THIS WAS EXPLORED -->
+  <section id="exploration">
+    <div class="kicker">04 — Process</div>
+    <h2>How this was explored</h2>
+    <p class="lede">Rather than eyeballing this in isolation, I built an interactive comparison tool using APL's actual typography tokens — pulled directly from <code class="inline">design-tokens/src/typography/core.yaml</code> and <code class="inline">apl-theme.css</code> in our repo, not a generic type scale — so every judgment call below is grounded in what we actually ship.</p>
+
+    <div class="exploration-list">
+      <div class="item"><span class="n">1</span>Every APL Inter-based token (body, heading, and number styles) rendered with real APL size/weight/letter-spacing/feature-settings values, so nothing here is a hypothetical.</div>
+      <div class="item"><span class="n">2</span>A three-way comparison per token: APL as shipped today, APL with optical sizing on, and optical sizing on with letter-spacing reset to stock — to isolate whether our manual tracking adjustments and optical sizing were fighting each other.</div>
+      <div class="item"><span class="n">3</span>A stacked side-by-side view so line lengths could be compared directly, plus a color-blended overlay mode to spot exactly where letterforms and widths diverge.</div>
+      <div class="item"><span class="n">4</span>Verification against source rather than assumption — for example, catching that I'd initially misattributed a stale, unused CSS variable's letter-spacing value to a token that doesn't actually consume it.</div>
+    </div>
+
+    <div class="link-card">
+      <div>
+        <div class="lc-title">APL Optical Sizing Comparison Tool</div>
+        <div class="lc-sub">Interactive tool used to reach the conclusions below</div>
+      </div>
+      <a href="comparison-tool.html" target="_blank">Open tool →</a>
+    </div>
+  </section>
+
+  <!-- 5. CONCLUSIONS -->
+  <section id="conclusions">
+    <div class="kicker">05 — Conclusions</div>
+    <h2>What we found</h2>
+
+    <div class="panel" style="margin-top:24px;">
+      <div class="conclusion">
+        <div class="num">1</div>
+        <div>
+          <h4>Body text is unaffected</h4>
+          <p>Every APL body/UI token sits at or below Inter's opsz floor of 14. Turning optical sizing on globally will not change letterforms or widths for metadata, extrasmall, small, compact, or paragraph styles — meaning buttons, form fields, table cells, and labels stay exactly as wide as they are today.</p>
+          <span class="tag ok">No layout risk</span>
+        </div>
+      </div>
+
+      <div class="conclusion">
+        <div class="num">2</div>
+        <div>
+          <h4>Headings benefit — tighter tracking, redrawn glyphs</h4>
+          <p>Heading tokens (16–20px) sit just above the opsz floor, so they'll pick up Inter's optically-tightened spacing and refined letterforms. The shift is real but modest at this size — see the morph demo below at a dramatized 20px‑equivalent scale.</p>
+          <span class="tag watch">Watch fixed-width containers (16–20px)</span>
+        </div>
+      </div>
+
+      <div class="conclusion">
+        <div class="num">3</div>
+        <div>
+          <h4>Numbers benefit the most</h4>
+          <p>Number tokens (32–48px) are the largest Inter sizes we use anywhere in APL, putting them closest to the opsz ceiling of 32 — the point of maximum optical refinement. This is where the craft upgrade will be most visible: AUM figures, returns, and other large numerics will render with Inter's most refined large-size shapes.</p>
+          <span class="tag ok">Biggest visible improvement</span>
+        </div>
+      </div>
+
+      <div class="conclusion">
+        <div class="num">4</div>
+        <div>
+          <h4>Remove the manual −1px letter-spacing on number tokens</h4>
+          <p>That −1px tracking was added as a manual optical correction before Inter's optical sizing axis existed. Once optical sizing is on, its own built-in spacing adjustment does that job — stacking our manual −1px on top makes large numbers feel over-tightened. This adjustment should be removed as part of the rollout, not just left in place.</p>
+          <span class="tag change">Token change required</span>
+        </div>
+      </div>
+    </div>
+
+    <h3>Heading transformation, dramatized</h3>
+    <p class="body-copy">This is the real change headings will see — shown at a dramatized scale so it's visible, but driven by the actual opsz value (20) that a 20px heading resolves to. Toggle to morph smoothly between off (opsz 0) and on (opsz 20).</p>
+
+    <div class="morph-stage">
+      <span class="morph-word" id="morphWord">Heading</span>
+      <div class="morph-readout" id="morphReadout">font-variation-settings: 'opsz' 0</div>
+      <div class="stage-controls">
+        <div class="toggle-pill" style="background:#ece9e2;">
+          <button type="button" id="btnMorphOff" class="active" onclick="setMorph(false)" style="color:#6b6a63;">Off</button>
+          <button type="button" id="btnMorphOn" onclick="setMorph(true)" style="color:#6b6a63;">On (opsz 20)</button>
+        </div>
+      </div>
+      <p class="morph-note">Rendered large for visibility; the underlying opsz target (20) matches what a real 20px APL heading resolves to with optical sizing on.</p>
+    </div>
+  </section>
+
+  <!-- 6. IMPLEMENTATION -->
+  <section id="implementation">
+    <div class="kicker">06 — Implementation</div>
+    <h2>How we'll ship this</h2>
+
+    <ol class="steps">
+      <li>
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Enable optical sizing at the theme level</h4>
+          <p>Add <code class="inline">font-optical-sizing: auto</code> to APL's base Inter font stack (wherever <code class="inline">--theme-font-family-sans</code> is applied), rather than per-component. This makes it a global, single-point toggle.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Remove the number-token letter-spacing override</h4>
+          <p>Delete or zero out the −1px letter-spacing currently applied to <code class="inline">number-l</code>, <code class="inline">number-xl</code>, and <code class="inline">number-xxl</code> (via <code class="inline">--theme-letter-spacing-number</code>). Optical sizing supersedes this manual correction.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Leave body/UI token letter-spacing untouched</h4>
+          <p>No change needed for metadata/extrasmall/small/compact/paragraph tokens — confirmed unaffected by the opsz floor, so their existing tracking values remain correct as-is.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h4>QA pass on the 16–20px "watch zone"</h4>
+          <p>Spot-check heading tokens in fixed-width UI (table header cells, tab labels, modal title bars) for wrapping or truncation regressions before merging — this is the one place a width shift is plausible.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h4>Browser/platform support check</h4>
+          <p><code class="inline">font-optical-sizing</code> is supported in Chrome, Edge, and Safari. Confirm current support in any WebViews or older embedded browsers APL still targets; where unsupported, the fallback is simply today's default (no visual regression, just no benefit).</p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="code">
+<span class="c1">/* apl-theme.css — base sans font stack */</span><br>
+--theme-font-family-sans: <span class="c4">'Inter'</span>, <span class="c4">'Univers-Next'</span>, <span class="c4">'Helvetica Neue'</span>, <span class="c4">'Helvetica'</span>, <span class="c4">'Arial'</span>, <span class="c4">'sans-serif'</span>;<br><br>
+<span class="c1">/* add globally alongside the font-family declaration */</span><br>
+font-optical-sizing: <span class="c3">auto</span>;<br><br>
+<span class="c1">/* components.css — number tokens: remove this line */</span><br>
+<span class="c2">letter-spacing: var(--theme-letter-spacing-number, -1px); /* ← delete */</span>
+    </div>
+
+    <h3>What doesn't change</h3>
+    <p class="body-copy">No token renames, no size changes, no component API changes. This ships as a rendering + one token cleanup, reviewable independently of any other design-tokens work in flight.</p>
+  </section>
+
+  <footer class="credit">APL Design Tokens — Optical Sizing Rollout · Prepared with the interactive comparison tool linked above</footer>
+
+</div>
+
+<script>
+  document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  function setExtreme(on) {
+    const word = document.getElementById('extremeWord');
+    const btnOff = document.getElementById('btnExtremeOff');
+    const btnOn = document.getElementById('btnExtremeOn');
+    if (on) {
+      word.classList.add('opsz-on');
+      btnOn.classList.add('active');
+      btnOff.classList.remove('active');
+    } else {
+      word.classList.remove('opsz-on');
+      btnOff.classList.add('active');
+      btnOn.classList.remove('active');
+    }
+  }
+
+  function setMorph(on) {
+    const word = document.getElementById('morphWord');
+    const readout = document.getElementById('morphReadout');
+    const btnOff = document.getElementById('btnMorphOff');
+    const btnOn = document.getElementById('btnMorphOn');
+    if (on) {
+      word.classList.add('opsz-on');
+      readout.textContent = "font-variation-settings: 'opsz' 20";
+      btnOn.classList.add('active');
+      btnOn.style.background = '#874FFF';
+      btnOn.style.color = '#fff';
+      btnOff.classList.remove('active');
+      btnOff.style.background = 'transparent';
+      btnOff.style.color = '#6b6a63';
+    } else {
+      word.classList.remove('opsz-on');
+      readout.textContent = "font-variation-settings: 'opsz' 0";
+      btnOff.classList.add('active');
+      btnOff.style.background = '#874FFF';
+      btnOff.style.color = '#fff';
+      btnOn.classList.remove('active');
+      btnOn.style.background = 'transparent';
+      btnOn.style.color = '#6b6a63';
+    }
+  }
+</script>
+</body>
+</html>
